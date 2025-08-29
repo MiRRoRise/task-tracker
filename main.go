@@ -18,6 +18,18 @@ type Task struct {
 	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
+/*
+Команды:
+add "Описание задачи"
+update 1 "Новое описание"
+delete 1
+mark-in-progress 1
+mark-done 1
+list
+list todo
+exit
+*/
+
 func add(task string, tasks *[]Task) {
 	task = strings.Trim(task, "\"")
 	t1 := Task{len(*tasks) + 1, task, "todo", time.Now(), time.Now()}
