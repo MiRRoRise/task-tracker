@@ -7,17 +7,20 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type Task struct {
-	Id          int    `json:"id"`
-	Description string `json:"description"`
-	Status      string `json:"status"`
+	Id          int       `json:"id"`
+	Description string    `json:"description"`
+	Status      string    `json:"status"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
 func add(task string, tasks *[]Task) {
 	task = strings.Trim(task, "\"")
-	t1 := Task{len(*tasks) + 1, task, "todo"}
+	t1 := Task{len(*tasks) + 1, task, "todo", time.Now(), time.Now()}
 	*tasks = append(*tasks, t1)
 
 	data, err := json.MarshalIndent(*tasks, "", "  ")
@@ -41,6 +44,8 @@ func update(id int, task string, tasks *[]Task) {
 	for ind, elem := range *tasks {
 		if elem.Id == id {
 			(*tasks)[ind].Description = task
+			(*tasks)[ind].UpdatedAt = time.Now()
+			found = true
 		}
 	}
 
@@ -94,6 +99,7 @@ func make_progress(id int, tasks *[]Task) {
 	for ind, elem := range *tasks {
 		if elem.Id == id {
 			(*tasks)[ind].Status = "in-progress"
+			(*tasks)[ind].UpdatedAt = time.Now()
 			found = true
 		}
 	}
@@ -119,6 +125,7 @@ func make_done(id int, tasks *[]Task) {
 	for ind, elem := range *tasks {
 		if elem.Id == id {
 			(*tasks)[ind].Status = "done"
+			(*tasks)[ind].UpdatedAt = time.Now()
 			found = true
 		}
 	}
@@ -140,7 +147,17 @@ func make_done(id int, tasks *[]Task) {
 }
 
 func see_all(tasks *[]Task) {
+	for _, elem := range *tasks {
+		fmt.Print("ID: ", elem.Id, "\nDescription: ", elem.Description, "\nStatus: ", elem.Status, "\nCreatedAt: ", elem.CreatedAt.Format("2006-01-02 15:04:05"), "\nUpdatedAt: ", elem.UpdatedAt.Format("2006-01-02 15:04:05"), "\n\n")
+	}
+}
 
+func see_mark(mark string, tasks *[]Task) {
+	for _, elem := range *tasks {
+		if elem.Status == mark {
+			fmt.Print("ID: ", elem.Id, "\nDescription: ", elem.Description, "\nStatus: ", elem.Status, "\nCreatedAt: ", elem.CreatedAt.Format("2006-01-02 15:04:05"), "\nUpdatedAt: ", elem.UpdatedAt.Format("2006-01-02 15:04:05"), "\n\n")
+		}
+	}
 }
 
 func main() {
@@ -158,7 +175,7 @@ func main() {
 		fmt.Println("Ошибка чтения файла: ", err)
 		return
 	}
-	fmt.Print(string(file))
+
 	var tasks []Task
 	if len(file) != 0 {
 		err = json.Unmarshal(file, &tasks)
@@ -227,7 +244,11 @@ func main() {
 			}
 			make_done(id1, &tasks)
 		case "list":
-			see_all(&tasks)
+			if len(option) == 1 {
+				see_all(&tasks)
+			} else {
+				see_mark(option[1], &tasks)
+			}
 		case "exit":
 			return
 		default:
